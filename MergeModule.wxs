@@ -3,6 +3,8 @@
 
 	<?define ServiceName="MySQLServer"?>
 	<?define ServiceIni="$(var.ServiceName).ini"?>
+	<?define ServiceAccountDomain="NT AUTHORITY"?>
+	<?define ServiceAccount="NetworkService"?>
 
 	<Module
 		Id="MySQLInstallAsService"
@@ -31,12 +33,9 @@
 			<StartServices/>
 		</InstallExecuteSequence>
 
-		<IgnoreModularization Name="C.bin.mysqld.exe"/>
-		<IgnoreModularization Name="D.bin"/>
-		<IgnoreModularization Name="DATADIR"/>
-
 		<IgnoreTable Id="Directory"/>
 		<IgnoreTable Id="Component"/>
+		<IgnoreTable Id="CreateFolder"/>
 
 		<Component
 			Id="C.bin.mysqld.exe" 
@@ -46,21 +45,19 @@
 			<ServiceInstall
 				Name="$(var.ServiceName)"
 				DisplayName="MySQL Server"
-				Arguments='--defaults-file="[DATADIR]\$(var.ServiceIni)" $(var.ServiceName)'
+				Arguments='--defaults-file="[DATADIR]$(var.ServiceIni)" $(var.ServiceName)'
 				Description="MySQL Server service"
 				ErrorControl="normal"
 				Interactive="no"
 				Start="auto"
 				Type="ownProcess"
-				Vital="yes"
-				Account="NT AUTHORITY\LocalService"
+				Vital="no"
+				Account="$(var.ServiceAccountDomain)\$(var.ServiceAccount)"
 			/>
 			<ServiceControl
 				Id="StartAndStopService"
 				Name="$(var.ServiceName)"
-				Start="install"
-				Stop="uninstall"
-				Wait="yes"
+				Wait="no"
 			/>
 
 			<IniFile Id="mysql.ini.01" Action="addLine" Directory="DATADIR" Name="$(var.ServiceIni)" Section="client" Key="port" Value="3306"/>
@@ -68,15 +65,22 @@
 			<IniFile Id="mysql.ini.02" Action="addLine" Directory="DATADIR" Name="$(var.ServiceIni)" Section="mysql" Key="default-character-set" Value="utf8"/>
 
 			<IniFile Id="mysql.ini.03" Action="addLine" Directory="DATADIR" Name="$(var.ServiceIni)" Section="mysqld" Key="port" Value="3306"/>
+			<!--user                           = mysql
+			socket                         = [DATADIR]mysql.sock
+			pid_file                       = [DATADIR]mysql.pid-->
 			<IniFile Id="mysql.ini.04" Action="addLine" Directory="DATADIR" Name="$(var.ServiceIni)" Section="mysqld" Key="basedir" Value="[INSTALLDIR]"/>
-			<IniFile Id="mysql.ini.05" Action="addLine" Directory="DATADIR" Name="$(var.ServiceIni)" Section="mysqld" Key="datadir" Value="[datadir.mysql.mysqlserver.data]"/>
+			<IniFile Id="mysql.ini.05" Action="addLine" Directory="DATADIR" Name="$(var.ServiceIni)" Section="mysqld" Key="datadir" Value="[DATADIR]data"/>
 			<IniFile Id="mysql.ini.06" Action="addLine" Directory="DATADIR" Name="$(var.ServiceIni)" Section="mysqld" Key="character-set-server" Value="utf8"/>
 			<IniFile Id="mysql.ini.07" Action="addLine" Directory="DATADIR" Name="$(var.ServiceIni)" Section="mysqld" Key="sql-mode" Value="STRICT_TRANS_TABLES,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION"/>
 			<IniFile Id="mysql.ini.08" Action="addLine" Directory="DATADIR" Name="$(var.ServiceIni)" Section="mysqld" Key="max_connections" Value="100"/>
 			<IniFile Id="mysql.ini.09" Action="addLine" Directory="DATADIR" Name="$(var.ServiceIni)" Section="mysqld" Key="query_cache_size" Value="256M"/>
-			<IniFile Id="mysql.ini.10" Action="addLine" Directory="DATADIR" Name="$(var.ServiceIni)" Section="mysqld" Key="table_cache" Value="1520"/>
+			<!--<IniFile Id="mysql.ini.10" Action="addLine" Directory="DATADIR" Name="$(var.ServiceIni)" Section="mysqld" Key="table_cache" Value="1520"/>-->
 			<IniFile Id="mysql.ini.11" Action="addLine" Directory="DATADIR" Name="$(var.ServiceIni)" Section="mysqld" Key="tmp_table_size" Value="16M"/>
 			<IniFile Id="mysql.ini.12" Action="addLine" Directory="DATADIR" Name="$(var.ServiceIni)" Section="mysqld" Key="thread_cache_size" Value="38"/>
+			<IniFile Id="mysql.ini.31" Action="addLine" Directory="DATADIR" Name="$(var.ServiceIni)" Section="mysqld" Key="skip_name_resolve" Value="ON"/>
+
+			<IniFile Id="mysql.ini.42" Action="addLine" Directory="DATADIR" Name="$(var.ServiceIni)" Section="mysqld" Key="log_queries_not_using_indexes" Value="1"/>
+			<IniFile Id="mysql.ini.43" Action="addLine" Directory="DATADIR" Name="$(var.ServiceIni)" Section="mysqld" Key="slow_query_log" Value="1"/>
 
 			<IniFile Id="mysql.ini.13" Action="addLine" Directory="DATADIR" Name="$(var.ServiceIni)" Section="mysqld" Key="default-storage-engine" Value="MyISAM"/><!--INNODB-->
 			<IniFile Id="mysql.ini.14" Action="addLine" Directory="DATADIR" Name="$(var.ServiceIni)" Section="mysqld" Key="myisam_max_sort_file_size" Value="1G"/>
@@ -85,18 +89,40 @@
 			<IniFile Id="mysql.ini.17" Action="addLine" Directory="DATADIR" Name="$(var.ServiceIni)" Section="mysqld" Key="read_buffer_size" Value="64K"/>
 			<IniFile Id="mysql.ini.18" Action="addLine" Directory="DATADIR" Name="$(var.ServiceIni)" Section="mysqld" Key="read_rnd_buffer_size" Value="256K"/>
 			<IniFile Id="mysql.ini.19" Action="addLine" Directory="DATADIR" Name="$(var.ServiceIni)" Section="mysqld" Key="sort_buffer_size" Value="256K"/>
+			<IniFile Id="mysql.ini.39" Action="addLine" Directory="DATADIR" Name="$(var.ServiceIni)" Section="mysqld" Key="myisam_recover" Value="FORCE,BACKUP"/>
 
-			<IniFile Id="mysql.ini.20" Action="addLine" Directory="DATADIR" Name="$(var.ServiceIni)" Section="mysqld" Key="skip-innodb" Value="yes"/>
-<!--
+			<!--отключать INNODB теперь нельзя - системные таблицы уже INNODB, а не MyISAM-->
+			<!--<IniFile Id="mysql.ini.20" Action="addLine" Directory="DATADIR" Name="$(var.ServiceIni)" Section="mysqld" Key="skip-innodb" Value="OFF"/>-->
 			<IniFile Id="mysql.ini.21" Action="addLine" Directory="DATADIR" Name="$(var.ServiceIni)" Section="mysqld" Key="innodb_additional_mem_pool_size" Value="12M"/>
 			<IniFile Id="mysql.ini.22" Action="addLine" Directory="DATADIR" Name="$(var.ServiceIni)" Section="mysqld" Key="innodb_flush_log_at_trx_commit" Value="2"/>
 			<IniFile Id="mysql.ini.23" Action="addLine" Directory="DATADIR" Name="$(var.ServiceIni)" Section="mysqld" Key="innodb_log_buffer_size" Value="6M"/>
 			<IniFile Id="mysql.ini.24" Action="addLine" Directory="DATADIR" Name="$(var.ServiceIni)" Section="mysqld" Key="innodb_buffer_pool_size" Value="512M"/>
 			<IniFile Id="mysql.ini.25" Action="addLine" Directory="DATADIR" Name="$(var.ServiceIni)" Section="mysqld" Key="innodb_log_file_size" Value="10M"/>
 			<IniFile Id="mysql.ini.26" Action="addLine" Directory="DATADIR" Name="$(var.ServiceIni)" Section="mysqld" Key="innodb_thread_concurrency" Value="10"/>
--->			
-
+			
 		</Component>
+		<IgnoreModularization Name="C.bin.mysqld.exe"/>
+		<IgnoreModularization Name="D.bin"/>
+		<IgnoreModularization Name="DATADIR"/>
+
+		<Component
+			Id="component.datadir.data"
+			Guid="{1D9A385D-6EDF-4FB7-8652-35973C399D0C}"
+			Directory="datadir.mysql.mysqlserver.data"
+		>
+			<CreateFolder>
+				<Permission
+					Domain="$(var.ServiceAccountDomain)"
+					User="$(var.ServiceAccount)"
+					GenericWrite="yes"
+				/>
+			</CreateFolder>
+		</Component>
+		<IgnoreModularization Name="component.datadir.data"/>
+		<IgnoreModularization Name="datadir.mysql.mysqlserver.data"/>
+
+		<Property Id="INSTALLDIR" Admin="yes" SuppressModularization="yes"/>
+		<Property Id="DATADIR" Admin="yes" SuppressModularization="yes"/>
 
 	</Module>
 </Wix>
