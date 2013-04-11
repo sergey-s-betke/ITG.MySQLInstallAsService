@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
 
-	<?define ServiceName="MySQLServer"?>
-	<?define ServiceIni="$(var.ServiceName).ini"?>
+	<?define InstanceName="MySQLServer"?>
+	<?define ServiceName="[SERVICENAME]"?>
+	<?define ServiceIni="my.ini"?>
 	<?define ServiceAccountDomain="NT AUTHORITY"?>
 	<?define ServiceAccount="NetworkService"?>
 
@@ -24,7 +25,12 @@
 			InstallScope="perMachine"
 			Languages="1033"
 			SummaryCodepage="1252"
+			ShortNames="no"
 		/>
+
+		<Property Id="SERVICENAME" Value="$(var.InstanceName)" Admin="yes" SuppressModularization="yes"/>
+		<Property Id="INSTALLDIR" Admin="yes" SuppressModularization="yes"/>
+		<Property Id="DATADIR" Admin="yes" SuppressModularization="yes"/>
 
 		<InstallExecuteSequence>
 			<StopServices/>
@@ -51,23 +57,31 @@
 				Interactive="no"
 				Start="auto"
 				Type="ownProcess"
-				Vital="no"
+				Vital="yes"
 				Account="$(var.ServiceAccountDomain)\$(var.ServiceAccount)"
 			/>
 			<ServiceControl
 				Id="StartAndStopService"
 				Name="$(var.ServiceName)"
-				Wait="no"
+				Start="install"
+				Wait="yes"
 			/>
 
-			<IniFile Id="mysql.ini.01" Action="addLine" Directory="DATADIR" Name="$(var.ServiceIni)" Section="client" Key="port" Value="3306"/>
+			<IniFile Id="mysql.ini.client.01" Action="addLine" Directory="DATADIR" Name="$(var.ServiceIni)" Section="client" Key="protocol" Value="MEMORY"/>
+			<IniFile Id="mysql.ini.client.02" Action="addLine" Directory="DATADIR" Name="$(var.ServiceIni)" Section="client" Key="shared-memory-base-name" Value="$(var.ServiceName)"/>
+			<IniFile Id="mysql.ini.client.03" Action="addLine" Directory="DATADIR" Name="$(var.ServiceIni)" Section="client" Key="pipe" Value="ON"/>
+			<IniFile Id="mysql.ini.client.04" Action="addLine" Directory="DATADIR" Name="$(var.ServiceIni)" Section="client" Key="socket" Value="$(var.ServiceName)"/>
+			<IniFile Id="mysql.ini.client.05" Action="addLine" Directory="DATADIR" Name="$(var.ServiceIni)" Section="client" Key="port" Value="3306"/>
 
 			<IniFile Id="mysql.ini.02" Action="addLine" Directory="DATADIR" Name="$(var.ServiceIni)" Section="mysql" Key="default-character-set" Value="utf8"/>
 
-			<IniFile Id="mysql.ini.03" Action="addLine" Directory="DATADIR" Name="$(var.ServiceIni)" Section="mysqld" Key="port" Value="3306"/>
-			<!--user                           = mysql
-			socket                         = [DATADIR]mysql.sock
-			pid_file                       = [DATADIR]mysql.pid-->
+			<IniFile Id="mysql.ini.51" Action="addLine" Directory="DATADIR" Name="$(var.ServiceIni)" Section="mysqld" Key="shared-memory" Value="ON"/>
+			<IniFile Id="mysql.ini.52" Action="addLine" Directory="DATADIR" Name="$(var.ServiceIni)" Section="mysqld" Key="shared-memory-base-name" Value="$(var.ServiceName)"/>
+			<IniFile Id="mysql.ini.53" Action="addLine" Directory="DATADIR" Name="$(var.ServiceIni)" Section="mysqld" Key="pid_file" Value="[DATADIR]$(var.ServiceName).pid"/>
+			<IniFile Id="mysql.ini.54" Action="addLine" Directory="DATADIR" Name="$(var.ServiceIni)" Section="mysqld" Key="enable-named-pipe" Value="ON"/>
+			<IniFile Id="mysql.ini.55" Action="addLine" Directory="DATADIR" Name="$(var.ServiceIni)" Section="mysqld" Key="socket" Value="$(var.ServiceName)"/>
+			<IniFile Id="mysql.ini.56" Action="addLine" Directory="DATADIR" Name="$(var.ServiceIni)" Section="mysqld" Key="port" Value="3306"/>
+
 			<IniFile Id="mysql.ini.04" Action="addLine" Directory="DATADIR" Name="$(var.ServiceIni)" Section="mysqld" Key="basedir" Value="[INSTALLDIR]"/>
 			<IniFile Id="mysql.ini.05" Action="addLine" Directory="DATADIR" Name="$(var.ServiceIni)" Section="mysqld" Key="datadir" Value="[DATADIR]data"/>
 			<IniFile Id="mysql.ini.06" Action="addLine" Directory="DATADIR" Name="$(var.ServiceIni)" Section="mysqld" Key="character-set-server" Value="utf8"/>
@@ -114,15 +128,28 @@
 				<Permission
 					Domain="$(var.ServiceAccountDomain)"
 					User="$(var.ServiceAccount)"
+					GenericRead="yes"
 					GenericWrite="yes"
+					GenericExecute="yes"
+					Traverse="yes"
+					CreateChild="yes"
+					CreateFile="yes"
+					DeleteChild="yes"
+					Delete="yes"
+				/>
+				<Permission
+					Domain="NT AUTHORITY"
+					User="SYSTEM"
+					FileAllRights="yes" 
+				/>
+				<Permission
+					User="Administrators"
+					FileAllRights="yes"
 				/>
 			</CreateFolder>
 		</Component>
 		<IgnoreModularization Name="component.datadir.data"/>
 		<IgnoreModularization Name="datadir.mysql.mysqlserver.data"/>
-
-		<Property Id="INSTALLDIR" Admin="yes" SuppressModularization="yes"/>
-		<Property Id="DATADIR" Admin="yes" SuppressModularization="yes"/>
 
 	</Module>
 </Wix>
