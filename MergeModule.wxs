@@ -4,8 +4,9 @@
 	<?define InstanceName="MySQLServer"?>
 	<?define ServiceName="[SERVICENAME]"?>
 	<?define ServiceIni="my.ini"?>
-	<?define ServiceAccountDomain="NT AUTHORITY"?>
-	<?define ServiceAccount="NetworkService"?>
+	<?define ServiceAccountDomain="[SERVICEACCOUNTDOMAIN]"?>
+	<?define ServiceAccount="[SERVICEACCOUNT]"?>
+	<?define ServiceAccountPassword="[SERVICEACCOUNTPASSWORD]"?>
 
 	<Module
 		Id="MySQLInstallAsService"
@@ -31,6 +32,9 @@
 		<Property Id="SERVICENAME" Value="$(var.InstanceName)" Admin="yes" SuppressModularization="yes"/>
 		<Property Id="INSTALLDIR" Admin="yes" SuppressModularization="yes"/>
 		<Property Id="DATADIR" Admin="yes" SuppressModularization="yes"/>
+		<Property Id="SERVICEACCOUNTDOMAIN" Value="NT AUTHORITY" Admin="yes" SuppressModularization="yes"/>
+		<Property Id="SERVICEACCOUNT" Value="NetworkService" Admin="yes" SuppressModularization="yes"/>
+		<Property Id="SERVICEACCOUNTPASSWORD" Admin="yes" SuppressModularization="yes"/>
 
 		<InstallExecuteSequence>
 			<StopServices/>
@@ -59,6 +63,7 @@
 				Type="ownProcess"
 				Vital="yes"
 				Account="$(var.ServiceAccountDomain)\$(var.ServiceAccount)"
+				Password="$(var.ServiceAccountPassword)"
 			/>
 			<ServiceControl
 				Id="StartAndStopService"
@@ -85,13 +90,15 @@
 			<IniFile Id="mysql.ini.04" Action="addLine" Directory="DATADIR" Name="$(var.ServiceIni)" Section="mysqld" Key="basedir" Value="[INSTALLDIR]"/>
 			<IniFile Id="mysql.ini.05" Action="addLine" Directory="DATADIR" Name="$(var.ServiceIni)" Section="mysqld" Key="datadir" Value="[DATADIR]data"/>
 			<IniFile Id="mysql.ini.06" Action="addLine" Directory="DATADIR" Name="$(var.ServiceIni)" Section="mysqld" Key="character-set-server" Value="utf8"/>
-			<IniFile Id="mysql.ini.07" Action="addLine" Directory="DATADIR" Name="$(var.ServiceIni)" Section="mysqld" Key="sql-mode" Value="STRICT_TRANS_TABLES,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION"/>
 			<IniFile Id="mysql.ini.08" Action="addLine" Directory="DATADIR" Name="$(var.ServiceIni)" Section="mysqld" Key="max_connections" Value="100"/>
 			<IniFile Id="mysql.ini.09" Action="addLine" Directory="DATADIR" Name="$(var.ServiceIni)" Section="mysqld" Key="query_cache_size" Value="256M"/>
 			<!--<IniFile Id="mysql.ini.10" Action="addLine" Directory="DATADIR" Name="$(var.ServiceIni)" Section="mysqld" Key="table_cache" Value="1520"/>-->
 			<IniFile Id="mysql.ini.11" Action="addLine" Directory="DATADIR" Name="$(var.ServiceIni)" Section="mysqld" Key="tmp_table_size" Value="16M"/>
 			<IniFile Id="mysql.ini.12" Action="addLine" Directory="DATADIR" Name="$(var.ServiceIni)" Section="mysqld" Key="thread_cache_size" Value="38"/>
 			<IniFile Id="mysql.ini.31" Action="addLine" Directory="DATADIR" Name="$(var.ServiceIni)" Section="mysqld" Key="skip_name_resolve" Value="ON"/>
+
+			<IniFile Id="mysql.ini.61" Action="addLine" Directory="DATADIR" Name="$(var.ServiceIni)" Section="mysqld" Key="sql-mode" Value="STRICT_TRANS_TABLES,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION"/>
+			<IniFile Id="mysql.ini.62" Action="addLine" Directory="DATADIR" Name="$(var.ServiceIni)" Section="mysqld" Key="explicit_defaults_for_timestamp" Value="ON"/>
 
 			<IniFile Id="mysql.ini.42" Action="addLine" Directory="DATADIR" Name="$(var.ServiceIni)" Section="mysqld" Key="log_queries_not_using_indexes" Value="1"/>
 			<IniFile Id="mysql.ini.43" Action="addLine" Directory="DATADIR" Name="$(var.ServiceIni)" Section="mysqld" Key="slow_query_log" Value="1"/>
